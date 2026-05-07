@@ -32,6 +32,10 @@ public class InfoCommand {
     public static Node findNode(Node root, String[] pathComponents) {
         Node current = root;
 
+        if (pathComponents == null) {
+            return current;
+        }
+
         for (String component : pathComponents) {
             // 跳过多余或者空的斜杠分段（预留扩展）
             if (component == null || component.isEmpty() || component.equals(".")) {
@@ -43,21 +47,15 @@ public class InfoCommand {
             }
 
             // 通过检查该节点是否为目录来继续向下走
-            if (current.isDirectory()) {
-                // 利用反射获取 Directory 类的 getChild 从而取到子节点。
-                // 也可以强制类型转换，我们这里利用 Member 2 将提供的方法予以查找。
-                try {
-                    java.lang.reflect.Method getChildMethod = current.getClass().getMethod("getChild", String.class);
-                    current = (Node) getChildMethod.invoke(current, component);
-                    if (current == null) {
-                        return null; // 路径中断，遇到不存在的子节点
-                    }
-                } catch (Exception e) {
-                    return null;
-                }
-            } else {
+            if (!current.isDirectory()) {
                 // 如果目前访问的是一个普通的文件而不是目录，那么就无法继续深入路径
                 return null;
+            }
+
+            Directory dir = (Directory) current;
+            current = dir.getChild(component);
+            if (current == null) {
+                return null; // 路径中断，遇到不存在的子节点
             }
         }
 

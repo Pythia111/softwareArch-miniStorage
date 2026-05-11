@@ -1,3 +1,5 @@
+package com.example;
+
 /**
  * 节点的类型枚举。
  */

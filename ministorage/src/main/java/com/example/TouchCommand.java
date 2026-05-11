@@ -1,25 +1,28 @@
+package com.example;
+
 /**
- * 处理 MKDIR 命令的逻辑。
- * 创建目录：若父目录存在且为目录，则在其下创建新子目录；否则静默忽略。
+ * 处理 TOUCH 命令的逻辑。
+ * 创建文件：若父目录存在且为目录，则在其下创建新文件；若同名文件已存在则覆盖。
  */
-public class MkdirCommand {
+public class TouchCommand {
 
     /**
-     * 执行 MKDIR 命令。
+     * 执行 TOUCH 命令。
      *
      * @param root    根目录节点
-     * @param absPath 要创建的目录的绝对路径
+     * @param absPath 要创建的文件的绝对路径
+     * @param size    文件大小
      */
-    public static void execute(Node root, String absPath) {
+    public static void execute(Node root, String absPath, int size) {
         String normalized = PathUtil.normalize(absPath);
 
-        // 不能创建根目录
+        // 不能在根目录创建文件（路径必须包含文件名）
         if (normalized.equals("/")) {
             return;
         }
 
         String parentPath = PathUtil.getParentPath(normalized);
-        String dirName = PathUtil.getBaseName(normalized);
+        String fileName = PathUtil.getBaseName(normalized);
 
         // 定位父目录
         Node parent = findNode(root, PathUtil.split(parentPath));
@@ -28,12 +31,8 @@ public class MkdirCommand {
         }
 
         Directory parentDir = (Directory) parent;
-        // 若同名子节点已存在，静默忽略
-        if (parentDir.getChild(dirName) != null) {
-            return;
-        }
-
-        parentDir.putChild(dirName, new Directory(dirName));
+        // 若同名文件已存在，覆盖；否则创建新文件
+        parentDir.putChild(fileName, new File(fileName, size));
     }
 
     /**

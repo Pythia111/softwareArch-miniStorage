@@ -1,3 +1,5 @@
+package com.example;
+
 /**
  * 处理 INFO 命令的逻辑。
  */
@@ -24,7 +26,7 @@ public class InfoCommand {
     }
 
     /**
-     * 
+     *
      * 该方法用于根据路径定位指定的节点对象。
      * 成员1需自行完成查找逻辑。
      * 注意：由于 Directory 未在本成员代码中定义，请假设其拥有 Node getChild(String name) 方法。

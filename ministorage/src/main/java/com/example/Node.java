@@ -1,3 +1,5 @@
+package com.example;
+
 /**
  * 虚拟文件系统中所有节点的抽象基类。
  * 统一文件（File）、目录（Directory）以及未来可能存在的链接节点。

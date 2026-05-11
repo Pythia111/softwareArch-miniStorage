@@ -1,3 +1,4 @@
 *.class
 submission/
 submission.zip
+.DS_Store

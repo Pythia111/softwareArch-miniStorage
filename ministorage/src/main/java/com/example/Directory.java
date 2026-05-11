@@ -1,3 +1,5 @@
+package com.example;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;

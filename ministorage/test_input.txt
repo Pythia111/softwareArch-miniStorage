@@ -1,0 +1,7 @@
+MKDIR /usr
+MKDIR /usr/local
+TOUCH /usr/local/test.txt 100
+TOUCH /readme.md 50
+LS /
+INFO /
+INFO /usr

@@ -368,7 +368,7 @@ public class MemFsTest {
     }
 
     /**
-     * 测试负数大小（静默忽略）
+     * 测试负数大小（应该被忽略）
      */
     @Test
     public void testNegativeSize() {
@@ -379,7 +379,7 @@ public class MemFsTest {
         provideInput(input);
         Main.main(new String[]{});
 
-        String expected = "-100\n50\n";
+        String expected = "0\n50\n";  // 负数被忽略
         assertEquals(expected, getOutput());
     }
 }

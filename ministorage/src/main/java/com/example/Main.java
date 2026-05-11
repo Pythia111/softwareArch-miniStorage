@@ -33,7 +33,11 @@ public class Main {
                         try {
                             String path = parts[1];
                             int size = Integer.parseInt(parts[2]);
-                            memFs.touch(path, size);
+                            // 只允许非负数的文件大小
+                            if (size >= 0) {
+                                memFs.touch(path, size);
+                            }
+                            // 负数静默忽略
                         } catch (NumberFormatException e) {
                             // 非法的文件大小，静默忽略
                         }

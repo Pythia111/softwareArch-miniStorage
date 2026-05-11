@@ -2,6 +2,8 @@
 
 这是一个命令行的微型内存文件系统实现，使用 Maven 构建。
 
+当前开发版源码已按“入口层 / 命令层 / 文件系统模型层 / 路径层”重构；提交脚本会保留分层包目录结构导出到 `submission/src`，保证开发结构与提交结构一致。
+
 ## 项目结构
 
 ```
@@ -9,24 +11,29 @@ ministorage/
 ├── pom.xml                          # Maven 配置文件
 ├── build-submission.sh              # 提交脚本
 ├── src/
-│   ├── main/java/com/example/      # 源代码（带 package）
+│   ├── main/java/com/example/      # 入口层（带 package）
 │   │   ├── Main.java               # 主程序入口
 │   │   ├── MemFs.java              # 文件系统外观类
-│   │   ├── Node.java               # 节点抽象类
-│   │   ├── File.java               # 文件类
-│   │   ├── Directory.java          # 目录类
-│   │   ├── NodeType.java           # 节点类型枚举
-│   │   ├── SizeContext.java        # 大小计算上下文
-│   │   ├── PathUtil.java           # 路径工具类
-│   │   ├── MkdirCommand.java       # MKDIR 命令
-│   │   ├── TouchCommand.java       # TOUCH 命令
-│   │   ├── LsCommand.java          # LS 命令
-│   │   └── InfoCommand.java        # INFO 命令
+│   │   ├── command/                # 命令层
+│   │   │   ├── MkdirCommand.java
+│   │   │   ├── TouchCommand.java
+│   │   │   ├── LsCommand.java
+│   │   │   └── InfoCommand.java
+│   │   ├── fs/                     # 文件系统模型层
+│   │   │   ├── Node.java
+│   │   │   ├── File.java
+│   │   │   ├── Directory.java
+│   │   │   ├── NodeType.java
+│   │   │   ├── SizeContext.java
+│   │   │   └── NodeResolver.java
+│   │   └── path/                   # 路径解析层
+│   │       ├── PathUtil.java
+│   │       └── PathInfo.java
 │   └── test/java/com/example/      # 测试代码
-│       └── MemFsTest.java          # 完整的测试用例
+│       └── ComprehensiveMemFsTest.java
 └── submission/                      # 提交目录（自动生成）
-    ├── src/                         # 提交源代码（不带 package）
-    └── submission.zip               # 提交压缩包
+    └── src/                         # 提交源代码（保留 package 目录结构）
+        └── com/example/...          # 与主源码一致的包结构
 ```
 
 ## 成员分工
@@ -85,7 +92,7 @@ mvn clean compile
 mvn test
 ```
 
-项目包含 19 个完整的测试用例，覆盖：
+项目包含 65 个完整的测试用例，覆盖：
 - 基础命令功能测试
 - 边界情况测试
 - 异常处理测试
@@ -146,7 +153,7 @@ usr
 1. 清理并编译项目
 2. 运行所有测试用例
 3. 创建 `submission/` 目录
-4. 复制源文件并移除 package 声明
+4. 递归收集分层源文件并保留包目录到 `submission/src`
 5. 验证提交文件可以编译
 6. 创建 `submission.zip`
 
@@ -158,16 +165,17 @@ usr
 # 1. 创建提交目录
 mkdir -p submission/src
 
-# 2. 复制并处理源文件
-for file in src/main/java/com/example/*.java; do
-    filename=$(basename "$file")
-    sed '/^package com\.example;$/d' "$file" > "submission/src/$filename"
+# 2. 递归复制源文件并保留目录结构
+for file in $(find src/main/java -name '*.java' | sort); do
+    relative_path=${file#src/main/java/}
+    mkdir -p "submission/src/$(dirname "$relative_path")"
+    cp "$file" "submission/src/$relative_path"
 done
 
 # 3. 验证编译
 cd submission/src
-javac *.java
-rm -f *.class
+javac $(find . -name '*.java' | sort)
+find . -name '*.class' -delete
 cd ../..
 
 # 4. 创建压缩包
@@ -177,35 +185,17 @@ zip -r submission.zip submission/
 
 代码中已经为迭代二的功能预留了扩展点：
 
-1. **路径规范化** - `PathUtil.normalize()` 中预留了 `.` 和 `..` 的处理注释
+1. **路径解析扩展点** - `path/PathUtil.java` 与 `path/PathInfo.java` 已独立承担路径判定与拆分
 2. **防环机制** - `SizeContext` 已实现访问追踪
 3. **链接支持** - `NodeType.LINK` 枚举值已定义
-4. **递归搜索** - 节点结构支持树遍历
+4. **递归搜索** - `NodeResolver` 与节点结构支持树遍历
 5. **删除功能** - `Directory.removeChild()` 已实现
 
 ## 测试用例说明
 
-### 基础功能测试
-- `testBasicMkdirAndLs` - 基本的目录创建和列表
-- `testLsOnFile` - 对文件执行 LS
-- `testInfoOnFile` - 查询文件大小
-- `testInfoOnDirectory` - 查询目录大小
-- `testCompleteExample` - 完整示例
-
-### 覆盖测试
-- `testTouchOverwrite` - 文件覆盖
-
-### 错误处理测试
-- `testMkdirParentNotExist` - 父目录不存在
-- `testTouchParentNotExist` - 父目录不存在
-
-### 边界测试
-- `testLsEmptyDirectory` - 空目录
-- `testZeroSizeFile` - 零大小文件
-- `testLargeFile` - 大文件
-
-### 复杂场景测试
-- `testNestedDirectoryInfo` - 嵌套目录
-- `testRedundantSlashes` - 多余斜杠
-- `testMixedFilesAndDirectories` - 混合结构
-- `testComplexStructure` - 复杂目录树
+### 主要覆盖范围
+- MKDIR / TOUCH / LS / INFO 的正反向场景
+- 覆盖行为：文件覆盖文件、文件覆盖目录、目录不可反向覆盖
+- 路径合法性：根路径、尾斜杠、连续斜杠、`.`、`..`
+- 深层目录大小递归与目录转文件后的大小更新
+- 参数不足、参数过多、非法大小、相对路径等输入边界

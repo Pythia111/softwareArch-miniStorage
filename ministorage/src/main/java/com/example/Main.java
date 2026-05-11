@@ -30,9 +30,13 @@ public class Main {
 
                 case "TOUCH":
                     if (parts.length >= 3) {
-                        String path = parts[1];
-                        int size = Integer.parseInt(parts[2]);
-                        memFs.touch(path, size);
+                        try {
+                            String path = parts[1];
+                            int size = Integer.parseInt(parts[2]);
+                            memFs.touch(path, size);
+                        } catch (NumberFormatException e) {
+                            // 非法的文件大小，静默忽略
+                        }
                     }
                     break;
 

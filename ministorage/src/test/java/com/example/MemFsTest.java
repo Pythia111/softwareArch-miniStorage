@@ -350,4 +350,36 @@ public class MemFsTest {
         String expected = "documents\ndownloads\n6000\n106000\n106000\n";
         assertEquals(expected, getOutput());
     }
+
+    /**
+     * 测试非法的TOUCH输入（非数字大小）
+     */
+    @Test
+    public void testInvalidTouchSize() {
+        String input = "TOUCH /file xyz\n" +
+                       "INFO /\n" +
+                       "TOUCH /file 2\n" +
+                       "INFO /file\n";
+        provideInput(input);
+        Main.main(new String[]{});
+
+        String expected = "0\n2\n";
+        assertEquals(expected, getOutput());
+    }
+
+    /**
+     * 测试负数大小（静默忽略）
+     */
+    @Test
+    public void testNegativeSize() {
+        String input = "TOUCH /file -100\n" +
+                       "INFO /\n" +
+                       "TOUCH /file 50\n" +
+                       "INFO /file\n";
+        provideInput(input);
+        Main.main(new String[]{});
+
+        String expected = "-100\n50\n";
+        assertEquals(expected, getOutput());
+    }
 }

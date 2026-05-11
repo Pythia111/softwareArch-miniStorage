@@ -13,6 +13,10 @@ public class MkdirCommand {
      * @param absPath 要创建的目录的绝对路径
      */
     public static void execute(Node root, String absPath) {
+        if (!PathUtil.isAbsolutePath(absPath)) {
+            return;
+        }
+
         String normalized = PathUtil.normalize(absPath);
 
         // 不能创建根目录

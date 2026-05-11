@@ -28,6 +28,10 @@ public class LsCommand {
      * - 若目录为空：返回空列表。
      */
     public static List<String> ls(Node root, String absPath) {
+        if (!PathUtil.isAbsolutePath(absPath)) {
+            return new ArrayList<>();
+        }
+
         String[] pathComponents = PathUtil.split(absPath);
         Node target = findNode(root, pathComponents);
         if (target == null) {

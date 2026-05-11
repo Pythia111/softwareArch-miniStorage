@@ -28,7 +28,7 @@ public class MemFs {
      * @param absPath 绝对路径
      * @param size    文件大小
      */
-    public void touch(String absPath, int size) {
+    public void touch(String absPath, long size) {
         TouchCommand.execute(root, absPath, size);
     }
 

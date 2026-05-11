@@ -14,6 +14,10 @@ public class InfoCommand {
      * @param pathComponents 要查找的绝对路径各段
      */
     public static void execute(Node root, String absPath) {
+        if (!PathUtil.isAbsolutePath(absPath)) {
+            return;
+        }
+
         // 严格遵循规范：路径解析绝对交由成员3的 PathUtil 负责
         String[] pathComponents = PathUtil.split(absPath);
         Node target = findNode(root, pathComponents);

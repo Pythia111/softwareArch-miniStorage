@@ -13,7 +13,11 @@ public class TouchCommand {
      * @param absPath 要创建的文件的绝对路径
      * @param size    文件大小
      */
-    public static void execute(Node root, String absPath, int size) {
+    public static void execute(Node root, String absPath, long size) {
+        if (!PathUtil.isAbsolutePath(absPath)) {
+            return;
+        }
+
         String normalized = PathUtil.normalize(absPath);
 
         // 不能在根目录创建文件（路径必须包含文件名）

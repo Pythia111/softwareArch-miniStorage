@@ -4,9 +4,9 @@ package com.example;
  * 文件类，模拟一个普通文件节点，包含文件的大小信息。
  */
 public class File extends Node {
-    private int size;
+    private final long size;
 
-    public File(String name, int size) {
+    public File(String name, long size) {
         super(name);
         this.size = size;
     }

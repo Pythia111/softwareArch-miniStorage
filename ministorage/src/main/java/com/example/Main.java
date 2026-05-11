@@ -22,17 +22,17 @@ public class Main {
 
             switch (command) {
                 case "MKDIR":
-                    if (parts.length >= 2) {
+                    if (parts.length == 2) {
                         String path = parts[1];
                         memFs.mkdir(path);
                     }
                     break;
 
                 case "TOUCH":
-                    if (parts.length >= 3) {
+                    if (parts.length == 3) {
                         try {
                             String path = parts[1];
-                            int size = Integer.parseInt(parts[2]);
+                            long size = Long.parseLong(parts[2]);
                             // 只允许非负数的文件大小
                             if (size >= 0) {
                                 memFs.touch(path, size);
@@ -45,14 +45,14 @@ public class Main {
                     break;
 
                 case "LS":
-                    if (parts.length >= 2) {
+                    if (parts.length == 2) {
                         String path = parts[1];
                         memFs.ls(path);
                     }
                     break;
 
                 case "INFO":
-                    if (parts.length >= 2) {
+                    if (parts.length == 2) {
                         String path = parts[1];
                         memFs.info(path);
                     }

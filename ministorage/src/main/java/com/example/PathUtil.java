@@ -6,6 +6,10 @@ package com.example;
  */
 public class PathUtil {
 
+    public static boolean isAbsolutePath(String path) {
+        return path != null && !path.isEmpty() && path.startsWith("/");
+    }
+
     /**
      * 规范化绝对路径：去除多余斜杠。
      * 例：///a//b → /a/b
@@ -15,7 +19,7 @@ public class PathUtil {
      * ".." 表示父目录，弹出栈顶（根目录的 ".." 仍为根目录）。
      */
     public static String normalize(String absPath) {
-        if (absPath == null || absPath.isEmpty()) {
+        if (!isAbsolutePath(absPath)) {
             return "/";
         }
 

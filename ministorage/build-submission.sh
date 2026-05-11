@@ -79,3 +79,14 @@ echo "文件统计:"
 echo "  - 源文件数量: $(ls -1 submission/src/*.java | wc -l)"
 echo "  - 压缩包大小: $(ls -lh submission.zip | awk '{print $5}')"
 echo ""
+
+# 9. 清理临时文件（可选）
+read -p "是否删除 submission 文件夹？(y/N): " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    rm -rf submission
+    echo "✓ 已删除 submission 文件夹"
+else
+    echo "✓ 保留 submission 文件夹供检查"
+fi
+echo ""

@@ -1,10 +1,21 @@
-package com.example;
+package com.example.fs;
+
+import com.example.path.PathInfo;
+import com.example.path.PathUtil;
 
 /**
  * 文件树节点解析器。
  * 集中处理从根目录沿路径定位节点的逻辑，避免命令层重复实现。
  */
 public class NodeResolver {
+
+    public static Node resolve(Node root, String absPath) {
+        PathInfo pathInfo = PathUtil.parse(absPath);
+        if (pathInfo == null) {
+            return null;
+        }
+        return resolve(root, pathInfo);
+    }
 
     public static Node resolve(Node root, String[] pathComponents) {
         Node current = root;
@@ -47,5 +58,13 @@ public class NodeResolver {
             return null;
         }
         return (Directory) parent;
+    }
+
+    public static Directory resolveParentDirectory(Node root, String absPath) {
+        PathInfo pathInfo = PathUtil.parseNonRoot(absPath);
+        if (pathInfo == null) {
+            return null;
+        }
+        return resolveParentDirectory(root, pathInfo);
     }
 }

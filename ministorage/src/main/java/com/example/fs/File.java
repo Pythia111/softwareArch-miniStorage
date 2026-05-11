@@ -1,4 +1,4 @@
-package com.example;
+package com.example.fs;
 
 /**
  * 文件类，模拟一个普通文件节点，包含文件的大小信息。

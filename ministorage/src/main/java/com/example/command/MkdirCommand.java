@@ -1,4 +1,10 @@
-package com.example;
+package com.example.command;
+
+import com.example.fs.Directory;
+import com.example.fs.Node;
+import com.example.fs.NodeResolver;
+import com.example.path.PathInfo;
+import com.example.path.PathUtil;
 
 /**
  * 处理 MKDIR 命令的逻辑。
@@ -13,13 +19,8 @@ public class MkdirCommand {
      * @param absPath 要创建的目录的绝对路径
      */
     public static void execute(Node root, String absPath) {
-        PathInfo pathInfo = PathUtil.parse(absPath);
+        PathInfo pathInfo = PathUtil.parseNonRoot(absPath);
         if (pathInfo == null) {
-            return;
-        }
-
-        // 不能创建根目录
-        if (pathInfo.isRoot()) {
             return;
         }
 

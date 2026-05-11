@@ -1,4 +1,4 @@
-package com.example;
+package com.example.path;
 
 /**
  * 规范化后的绝对路径值对象。

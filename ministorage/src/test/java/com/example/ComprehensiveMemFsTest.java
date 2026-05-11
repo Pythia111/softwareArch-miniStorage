@@ -177,6 +177,14 @@ public class ComprehensiveMemFsTest {
     }
 
     @Test
+    @DisplayName("TOUCH负面测试: 父路径中的文件不能作为目录")
+    public void touchNegative_ParentIsFile() {
+        provideInput("TOUCH /a 10\nTOUCH /a/b 20\nINFO /\n");
+        Main.main(new String[]{});
+        assertEquals("10\n", getOutput());
+    }
+
+    @Test
     @DisplayName("TOUCH负面测试: 尝试在根目录创建文件")
     public void touchNegative_CreateAtRoot() {
         provideInput("TOUCH / 100\nMKDIR /test\nLS /\n");
@@ -404,27 +412,27 @@ public class ComprehensiveMemFsTest {
     }
 
     @Test
-    @DisplayName("路径测试: 点号在迭代一中视为普通名称")
+    @DisplayName("路径测试: 点号视为非法路径")
     public void pathTest_DotAsLiteralName() {
-        provideInput("MKDIR /dir\nTOUCH /dir/. 100\nINFO /dir/.\nLS /dir\n");
+        provideInput("MKDIR /dir\nTOUCH /dir/. 100\nINFO /dir/.\nINFO /dir\nLS /dir\n");
         Main.main(new String[]{});
-        assertEquals("100\n.\n", getOutput());
+        assertEquals("0\n", getOutput());
     }
 
     @Test
-    @DisplayName("路径测试: 双点在迭代一中视为普通名称")
+    @DisplayName("路径测试: 双点视为非法路径")
     public void pathTest_DotDotAsLiteralName() {
-        provideInput("MKDIR /dir\nTOUCH /dir/.. 7\nINFO /dir/..\nLS /dir\n");
+        provideInput("MKDIR /dir\nTOUCH /dir/.. 7\nINFO /dir/..\nINFO /dir\nLS /dir\n");
         Main.main(new String[]{});
-        assertEquals("7\n..\n", getOutput());
+        assertEquals("0\n", getOutput());
     }
 
     @Test
-    @DisplayName("路径测试: 点路径只做多余斜杠规范化")
+    @DisplayName("路径测试: 点路径视为非法路径")
     public void pathTest_DotPathsDoNotNavigate() {
-        provideInput("MKDIR /a\nMKDIR /a/..\nLS /a\n");
+        provideInput("MKDIR /a\nMKDIR /a/..\nINFO /a\nLS /a\n");
         Main.main(new String[]{});
-        assertEquals("..\n", getOutput());
+        assertEquals("0\n", getOutput());
     }
 
     // ==================== 覆盖行为测试 ====================
@@ -446,6 +454,15 @@ public class ComprehensiveMemFsTest {
     }
 
     @Test
+    @DisplayName("覆盖测试: 文件覆盖非空目录后整棵子树失效")
+    public void overwriteTest_FileToNonEmptyDirectoryTree() {
+        provideInput("MKDIR /a\nMKDIR /a/b\nTOUCH /a/b/main.java 10\nMKDIR /a/b/c\nTOUCH /a/b/c/test.java 20\n" +
+                    "INFO /a\nTOUCH /a/b 100\nINFO /a/b\nINFO /a\nLS /a\n");
+        Main.main(new String[]{});
+        assertEquals("30\n100\n100\nb\n", getOutput());
+    }
+
+    @Test
     @DisplayName("覆盖测试: 目录不能覆盖文件")
     public void overwriteTest_DirectoryCannotOverwriteFile() {
         provideInput("TOUCH /test 100\nMKDIR /test\nINFO /test\n");
@@ -459,6 +476,14 @@ public class ComprehensiveMemFsTest {
         provideInput("MKDIR /test\nTOUCH /test/file 50\nMKDIR /test\nINFO /test\n");
         Main.main(new String[]{});
         assertEquals("50\n", getOutput());
+    }
+
+    @Test
+    @DisplayName("MKDIR负面测试: 父路径中的文件不能作为目录")
+    public void mkdirNegative_ParentIsFile() {
+        provideInput("TOUCH /a 10\nMKDIR /a/b\nINFO /\n");
+        Main.main(new String[]{});
+        assertEquals("10\n", getOutput());
     }
 
     // ==================== 综合场景测试 ====================

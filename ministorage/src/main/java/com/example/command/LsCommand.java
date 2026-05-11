@@ -1,4 +1,10 @@
-package com.example;
+package com.example.command;
+
+import com.example.fs.Directory;
+import com.example.fs.Node;
+import com.example.fs.NodeResolver;
+import com.example.path.PathInfo;
+import com.example.path.PathUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,12 +34,7 @@ public class LsCommand {
      * - 若目录为空：返回空列表。
      */
     public static List<String> ls(Node root, String absPath) {
-        PathInfo pathInfo = PathUtil.parse(absPath);
-        if (pathInfo == null) {
-            return new ArrayList<>();
-        }
-
-        Node target = NodeResolver.resolve(root, pathInfo);
+        Node target = NodeResolver.resolve(root, absPath);
         if (target == null) {
             return new ArrayList<>();
         }

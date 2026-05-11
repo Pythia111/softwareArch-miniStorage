@@ -24,19 +24,19 @@ echo "步骤 3: 准备提交文件..."
 rm -rf submission
 mkdir -p submission/src
 
-# 4. 复制源文件（不带package声明的版本）
-echo "正在复制源文件（移除package声明）..."
+# 4. 复制源文件（保留分层package结构）
+echo "正在复制源文件（保留package目录结构）..."
 
-# 处理每个Java文件，移除package声明
-for file in src/main/java/com/example/*.java; do
-    filename=$(basename "$file")
-    # 移除package声明行，但保留其他所有内容
-    sed '/^package com\.example;$/d' "$file" > "submission/src/$filename"
-    echo "  - $filename"
+for file in $(find src/main/java -name '*.java' | sort); do
+    relative_path=${file#src/main/java/}
+    target_path="submission/src/$relative_path"
+    mkdir -p "$(dirname "$target_path")"
+    cp "$file" "$target_path"
+    echo "  - $relative_path"
 done
 
 # 5. 验证Main.java存在
-if [ ! -f "submission/src/Main.java" ]; then
+if [ ! -f "submission/src/com/example/Main.java" ]; then
     echo "错误: Main.java 不存在!"
     exit 1
 fi
@@ -47,11 +47,11 @@ echo "步骤 4: 验证提交文件..."
 # 6. 在submission目录中测试编译
 echo "正在验证提交文件可以编译..."
 cd submission/src
-javac *.java
+javac $(find . -name '*.java' | sort)
 if [ $? -eq 0 ]; then
     echo "✓ 编译成功"
     # 清理class文件
-    rm -f *.class
+    find . -name '*.class' -delete
 else
     echo "✗ 编译失败"
     exit 1
@@ -69,14 +69,14 @@ echo "=== 提交准备完成 ==="
 echo ""
 echo "提交文件: submission.zip"
 echo "包含的源文件:"
-ls -1 submission/src/*.java | xargs -n1 basename
+find submission/src -name '*.java' | sort | sed 's#^submission/src/##'
 echo ""
 echo "请将 submission.zip 上传到 Gradescope"
 echo ""
 
 # 8. 显示文件大小信息
 echo "文件统计:"
-echo "  - 源文件数量: $(ls -1 submission/src/*.java | wc -l)"
+echo "  - 源文件数量: $(find submission/src -name '*.java' | wc -l | tr -d ' ')"
 echo "  - 压缩包大小: $(ls -lh submission.zip | awk '{print $5}')"
 echo ""
 

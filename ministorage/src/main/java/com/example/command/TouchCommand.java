@@ -1,4 +1,11 @@
-package com.example;
+package com.example.command;
+
+import com.example.fs.Directory;
+import com.example.fs.File;
+import com.example.fs.Node;
+import com.example.fs.NodeResolver;
+import com.example.path.PathInfo;
+import com.example.path.PathUtil;
 
 /**
  * 处理 TOUCH 命令的逻辑。
@@ -14,13 +21,8 @@ public class TouchCommand {
      * @param size    文件大小
      */
     public static void execute(Node root, String absPath, long size) {
-        PathInfo pathInfo = PathUtil.parse(absPath);
+        PathInfo pathInfo = PathUtil.parseNonRoot(absPath);
         if (pathInfo == null) {
-            return;
-        }
-
-        // 不能在根目录创建文件（路径必须包含文件名）
-        if (pathInfo.isRoot()) {
             return;
         }
 

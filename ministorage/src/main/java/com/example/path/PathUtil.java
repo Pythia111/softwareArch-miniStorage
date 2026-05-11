@@ -1,4 +1,4 @@
-package com.example;
+package com.example.path;
 
 /**
  * 路径工具类：负责绝对路径的解析。
@@ -17,7 +17,21 @@ public class PathUtil {
         if ("/".equals(path)) {
             return true;
         }
-        return !path.endsWith("/") && !path.contains("//");
+        return !path.endsWith("/") && !path.contains("//") && !hasDotSegments(path);
+    }
+
+    private static boolean hasDotSegments(String path) {
+        String[] components = split(path);
+        if (components == null) {
+            return false;
+        }
+
+        for (String component : components) {
+            if (".".equals(component) || "..".equals(component)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -91,5 +105,13 @@ public class PathUtil {
             getParentPath(normalized),
             getBaseName(normalized)
         );
+    }
+
+    public static PathInfo parseNonRoot(String absPath) {
+        PathInfo pathInfo = parse(absPath);
+        if (pathInfo == null || pathInfo.isRoot()) {
+            return null;
+        }
+        return pathInfo;
     }
 }

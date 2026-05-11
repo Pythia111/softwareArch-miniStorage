@@ -1,5 +1,11 @@
 package com.example;
 
+import com.example.command.InfoCommand;
+import com.example.command.LsCommand;
+import com.example.command.MkdirCommand;
+import com.example.command.TouchCommand;
+import com.example.fs.Directory;
+
 /**
  * 微型内存文件系统外观类。
  * 持有根目录实例，对外提供统一的命令接口。

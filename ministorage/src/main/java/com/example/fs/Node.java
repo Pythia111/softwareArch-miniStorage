@@ -1,4 +1,4 @@
-package com.example;
+package com.example.fs;
 
 /**
  * 虚拟文件系统中所有节点的抽象基类。

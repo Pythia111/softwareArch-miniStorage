@@ -29,9 +29,6 @@ public class PathUtil {
             if (part.isEmpty()) {
                 continue;
             }
-            // 迭代二：在此处添加对 "." 和 ".." 的处理逻辑
-            // if (part.equals(".")) continue;
-            // if (part.equals("..")) { /* 弹出栈顶，根目录的 .. 仍为根目录 */ continue; }
             sb.append("/").append(part);
         }
 

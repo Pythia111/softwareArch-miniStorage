@@ -387,6 +387,30 @@ public class ComprehensiveMemFsTest {
         assertEquals("file\n", getOutput());
     }
 
+    @Test
+    @DisplayName("路径测试: 点号在迭代一中视为普通名称")
+    public void pathTest_DotAsLiteralName() {
+        provideInput("MKDIR /dir\nTOUCH /dir/. 100\nINFO /dir/.\nLS /dir\n");
+        Main.main(new String[]{});
+        assertEquals("100\n.\n", getOutput());
+    }
+
+    @Test
+    @DisplayName("路径测试: 双点在迭代一中视为普通名称")
+    public void pathTest_DotDotAsLiteralName() {
+        provideInput("MKDIR /dir\nTOUCH /dir/.. 7\nINFO /dir/..\nLS /dir\n");
+        Main.main(new String[]{});
+        assertEquals("7\n..\n", getOutput());
+    }
+
+    @Test
+    @DisplayName("路径测试: 点路径只做多余斜杠规范化")
+    public void pathTest_DotPathsDoNotNavigate() {
+        provideInput("MKDIR /a\nMKDIR /a/..\nLS /a\n");
+        Main.main(new String[]{});
+        assertEquals("..\n", getOutput());
+    }
+
     // ==================== 覆盖行为测试 ====================
 
     @Test

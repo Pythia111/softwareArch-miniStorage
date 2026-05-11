@@ -56,11 +56,7 @@ public class LsCommand {
         }
 
         for (String component : pathComponents) {
-            if (component == null || component.isEmpty() || component.equals(".")) {
-                continue;
-            }
-            if (component.equals("..")) {
-                // 迭代一：不处理 ..，留给 PathUtil 在迭代二规范化。
+            if (component == null || component.isEmpty()) {
                 continue;
             }
 

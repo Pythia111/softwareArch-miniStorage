@@ -44,11 +44,7 @@ public class InfoCommand {
 
         for (String component : pathComponents) {
             // 跳过多余或者空的斜杠分段（预留扩展）
-            if (component == null || component.isEmpty() || component.equals(".")) {
-                continue;
-            }
-            if (component.equals("..")) {
-                // 暂时简单的防御，具体 .. 逻辑可由 PathUtil 处理完毕后再传入。
+            if (component == null || component.isEmpty()) {
                 continue;
             }
 

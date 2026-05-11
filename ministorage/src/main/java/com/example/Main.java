@@ -42,11 +42,10 @@ public class Main {
                     case "TOUCH":
                         if (firstArg != null && secondArg != null && !hasExtraArgs) {
                             try {
-                                if (!isNonNegativeInteger(secondArg)) {
-                                    break;
-                                }
                                 long size = Long.parseLong(secondArg);
-                                memFs.touch(firstArg, size);
+                                if (size >= 0) {
+                                    memFs.touch(firstArg, size);
+                                }
                             } catch (NumberFormatException e) {
                                 // 非法的文件大小，静默忽略
                             }
@@ -73,17 +72,5 @@ public class Main {
         } catch (IOException e) {
             // 输入异常时按题意静默结束
         }
-    }
-
-    private static boolean isNonNegativeInteger(String value) {
-        if (value == null || value.isEmpty()) {
-            return false;
-        }
-        for (int i = 0; i < value.length(); i++) {
-            if (!Character.isDigit(value.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
     }
 }

@@ -24,25 +24,44 @@ echo "步骤 3: 准备提交文件..."
 rm -rf submission
 mkdir -p submission/src
 
-# 4. 复制源文件（保留分层package结构）
-echo "正在复制源文件（保留package目录结构）..."
+# 4. 复制源文件（去除com/example目录，保留子目录结构）
+echo "正在复制源文件（去除package声明，保留子目录结构）..."
 
 for file in $(find src/main/java -name '*.java' | sort); do
-    relative_path=${file#src/main/java/}
-    target_path="submission/src/$relative_path"
-    mkdir -p "$(dirname "$target_path")"
-    cp "$file" "$target_path"
+    # 获取相对于 src/main/java/com/example 的路径
+    relative_path=${file#src/main/java/com/example/}
+
+    # 如果路径包含子目录（command/fs/path），保留子目录
+    if [[ "$relative_path" == */* ]]; then
+        target_path="submission/src/$relative_path"
+        mkdir -p "$(dirname "$target_path")"
+    else
+        # 否则直接放在src根目录
+        target_path="submission/src/$relative_path"
+    fi
+
     echo "  - $relative_path"
+
+    # 去除package声明和com.example的import语句
+    sed '/^package com\.example;$/d' "$file" | \
+    sed '/^package com\.example\./d' | \
+    sed '/^import com\.example\./d' > "$target_path"
 done
 
 # 5. 验证Main.java存在
-if [ ! -f "submission/src/com/example/Main.java" ]; then
+if [ ! -f "submission/src/Main.java" ]; then
     echo "错误: Main.java 不存在!"
     exit 1
 fi
 
 echo ""
 echo "步骤 4: 验证提交文件..."
+
+# 5. 验证Main.java在正确位置
+if [ ! -f "submission/src/Main.java" ]; then
+    echo "错误: submission/src/Main.java 不存在!"
+    exit 1
+fi
 
 # 6. 在submission目录中测试编译
 echo "正在验证提交文件可以编译..."

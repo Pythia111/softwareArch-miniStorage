@@ -30,8 +30,9 @@ public class MkdirCommand {
             return;
         }
 
-        // 若同名子节点已存在，静默忽略
-        if (parentDir.getChild(pathInfo.getBaseName()) != null) {
+        // 若同名节点是目录，静默忽略；若是文件，则覆盖
+        Node existing = parentDir.getChild(pathInfo.getBaseName());
+        if (existing != null && existing.isDirectory()) {
             return;
         }
 

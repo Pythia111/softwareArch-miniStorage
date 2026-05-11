@@ -22,7 +22,7 @@ public class File extends Node {
     }
 
     @Override
-    public long getSize(SizeContext ctx) {
+    public long size(SizeContext ctx) {
         // 如果该节点已经被访问过了，直接返回0，预留防环机制
         if (ctx.isVisited(this)) {
             return 0;

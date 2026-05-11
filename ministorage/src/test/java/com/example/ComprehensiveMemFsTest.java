@@ -382,25 +382,25 @@ public class ComprehensiveMemFsTest {
     @Test
     @DisplayName("路径测试: 多余斜杠")
     public void pathTest_RedundantSlashes() {
-        provideInput("MKDIR ///usr///\nTOUCH //usr//file 100\nINFO /usr\nLS ///\n");
+        provideInput("TOUCH /file1 10\nMKDIR ///usr///\nTOUCH //usr//file 100\nINFO /\n");
         Main.main(new String[]{});
-        assertEquals("100\nusr\n", getOutput());  // LS /// 列出根目录，只有usr
+        assertEquals("10\n", getOutput());
     }
 
     @Test
-    @DisplayName("路径测试: 根目录多种表示")
+    @DisplayName("路径测试: 根目录仅接受单斜杠表示")
     public void pathTest_RootVariations() {
-        provideInput("TOUCH /file1 10\nINFO /\nINFO //\nINFO ///\n");
+        provideInput("TOUCH /file1 10\nINFO /\nINFO //\nINFO ///\nLS /\n");
         Main.main(new String[]{});
-        assertEquals("10\n10\n10\n", getOutput());
+        assertEquals("10\nfile1\n", getOutput());
     }
 
     @Test
-    @DisplayName("路径测试: 末尾斜杠")
+    @DisplayName("路径测试: 末尾斜杠视为非法路径")
     public void pathTest_TrailingSlash() {
-        provideInput("MKDIR /dir/\nTOUCH /dir/file/ 100\nLS /dir/\n");
+        provideInput("MKDIR /dir/\nMKDIR /dir\nTOUCH /dir/file/ 100\nTOUCH /dir/file 100\nLS /dir/\nINFO /dir\n");
         Main.main(new String[]{});
-        assertEquals("file\n", getOutput());
+        assertEquals("100\n", getOutput());
     }
 
     @Test
@@ -551,6 +551,23 @@ public class ComprehensiveMemFsTest {
                     "TOUCH /a/b/c/d/e/f/file 100\nINFO /a/b/c/d/e/f/file\n");
         Main.main(new String[]{});
         assertEquals("100\n", getOutput());
+    }
+
+    @Test
+    @DisplayName("边界测试: 深层目录INFO不应栈溢出")
+    public void edgeTest_DeepInfoShouldNotOverflowStack() {
+        StringBuilder input = new StringBuilder();
+        StringBuilder currentPath = new StringBuilder();
+        for (int i = 0; i < 2000; i++) {
+            currentPath.append("/d").append(i);
+            input.append("MKDIR ").append(currentPath).append("\n");
+        }
+        input.append("TOUCH ").append(currentPath).append("/leaf 1\n");
+        input.append("INFO /\n");
+
+        provideInput(input.toString());
+        Main.main(new String[]{});
+        assertEquals("1\n", getOutput());
     }
 
     @Test

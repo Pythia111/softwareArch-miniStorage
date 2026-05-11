@@ -1,6 +1,9 @@
 package com.example;
 
-import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.StringTokenizer;
 
 /**
  * 微型内存文件系统主程序入口。
@@ -9,64 +12,78 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         MemFs memFs = new MemFs();
-        Scanner scanner = new Scanner(System.in);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine().trim();
-            if (line.isEmpty()) {
-                continue;
-            }
+        try {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) {
+                    continue;
+                }
 
-            String[] parts = line.split("\\s+");
-            String command = parts[0];
+                StringTokenizer tokenizer = new StringTokenizer(line);
+                if (!tokenizer.hasMoreTokens()) {
+                    continue;
+                }
 
-            switch (command) {
-                case "MKDIR":
-                    if (parts.length == 2) {
-                        String path = parts[1];
-                        memFs.mkdir(path);
-                    }
-                    break;
+                String command = tokenizer.nextToken();
+                String firstArg = tokenizer.hasMoreTokens() ? tokenizer.nextToken() : null;
+                String secondArg = tokenizer.hasMoreTokens() ? tokenizer.nextToken() : null;
+                boolean hasExtraArgs = tokenizer.hasMoreTokens();
 
-                case "TOUCH":
-                    if (parts.length == 3) {
-                        try {
-                            String path = parts[1];
-                            if (!parts[2].matches("\\d+")) {
-                                break;
-                            }
-                            long size = Long.parseLong(parts[2]);
-                            // 只允许非负数的文件大小
-                            if (size >= 0) {
-                                memFs.touch(path, size);
-                            }
-                            // 负数静默忽略
-                        } catch (NumberFormatException e) {
-                            // 非法的文件大小，静默忽略
+                switch (command) {
+                    case "MKDIR":
+                        if (firstArg != null && secondArg == null && !hasExtraArgs) {
+                            memFs.mkdir(firstArg);
                         }
-                    }
-                    break;
+                        break;
 
-                case "LS":
-                    if (parts.length == 2) {
-                        String path = parts[1];
-                        memFs.ls(path);
-                    }
-                    break;
+                    case "TOUCH":
+                        if (firstArg != null && secondArg != null && !hasExtraArgs) {
+                            try {
+                                if (!isNonNegativeInteger(secondArg)) {
+                                    break;
+                                }
+                                long size = Long.parseLong(secondArg);
+                                memFs.touch(firstArg, size);
+                            } catch (NumberFormatException e) {
+                                // 非法的文件大小，静默忽略
+                            }
+                        }
+                        break;
 
-                case "INFO":
-                    if (parts.length == 2) {
-                        String path = parts[1];
-                        memFs.info(path);
-                    }
-                    break;
+                    case "LS":
+                        if (firstArg != null && secondArg == null && !hasExtraArgs) {
+                            memFs.ls(firstArg);
+                        }
+                        break;
 
-                default:
-                    // 未知命令，静默忽略
-                    break;
+                    case "INFO":
+                        if (firstArg != null && secondArg == null && !hasExtraArgs) {
+                            memFs.info(firstArg);
+                        }
+                        break;
+
+                    default:
+                        // 未知命令，静默忽略
+                        break;
+                }
+            }
+        } catch (IOException e) {
+            // 输入异常时按题意静默结束
+        }
+    }
+
+    private static boolean isNonNegativeInteger(String value) {
+        if (value == null || value.isEmpty()) {
+            return false;
+        }
+        for (int i = 0; i < value.length(); i++) {
+            if (!Character.isDigit(value.charAt(i))) {
+                return false;
             }
         }
-
-        scanner.close();
+        return true;
     }
 }

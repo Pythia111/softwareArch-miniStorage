@@ -13,58 +13,27 @@ public class MkdirCommand {
      * @param absPath 要创建的目录的绝对路径
      */
     public static void execute(Node root, String absPath) {
-        if (!PathUtil.isAbsolutePath(absPath)) {
+        PathInfo pathInfo = PathUtil.parse(absPath);
+        if (pathInfo == null) {
             return;
         }
-
-        String normalized = PathUtil.normalize(absPath);
 
         // 不能创建根目录
-        if (normalized.equals("/")) {
+        if (pathInfo.isRoot()) {
             return;
         }
-
-        String parentPath = PathUtil.getParentPath(normalized);
-        String dirName = PathUtil.getBaseName(normalized);
 
         // 定位父目录
-        Node parent = findNode(root, PathUtil.split(parentPath));
-        if (parent == null || !parent.isDirectory()) {
+        Directory parentDir = NodeResolver.resolveParentDirectory(root, pathInfo);
+        if (parentDir == null) {
             return;
         }
 
-        Directory parentDir = (Directory) parent;
         // 若同名子节点已存在，静默忽略
-        if (parentDir.getChild(dirName) != null) {
+        if (parentDir.getChild(pathInfo.getBaseName()) != null) {
             return;
         }
 
-        parentDir.putChild(dirName, new Directory(dirName));
-    }
-
-    /**
-     * 根据路径组件从根节点定位目标节点。
-     */
-    private static Node findNode(Node root, String[] pathComponents) {
-        Node current = root;
-        if (pathComponents == null) {
-            return current;
-        }
-
-        for (String component : pathComponents) {
-            if (component == null || component.isEmpty()) {
-                continue;
-            }
-            if (!current.isDirectory()) {
-                return null;
-            }
-            Directory dir = (Directory) current;
-            current = dir.getChild(component);
-            if (current == null) {
-                return null;
-            }
-        }
-
-        return current;
+        parentDir.putChild(pathInfo.getBaseName(), new Directory(pathInfo.getBaseName()));
     }
 }

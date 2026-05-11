@@ -1,7 +1,9 @@
 package com.example;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -62,20 +64,36 @@ public class Directory extends Node {
      * 注意：必须传递同一个 SizeContext 实例，以支持未来链接去重/防环。
      */
     @Override
-    public long getSize(SizeContext ctx) {
-        if (ctx.isVisited(this)) {
-            return 0;
-        }
-        ctx.addVisited(this);
-
+    public long size(SizeContext ctx) {
         long total = 0;
-        for (Map.Entry<String, Node> entry : children.entrySet()) {
-            Node child = entry.getValue();
-            if (child == null) {
+        Deque<Node> stack = new ArrayDeque<>();
+        stack.push(this);
+
+        while (!stack.isEmpty()) {
+            Node node = stack.pop();
+            if (node == null) {
                 continue;
             }
-            total += child.getSize(ctx);
+
+            if (node.isDirectory()) {
+                if (ctx.isVisited(node)) {
+                    continue;
+                }
+                ctx.addVisited(node);
+
+                Directory dir = (Directory) node;
+                for (Map.Entry<String, Node> entry : dir.children.entrySet()) {
+                    Node child = entry.getValue();
+                    if (child != null) {
+                        stack.push(child);
+                    }
+                }
+                continue;
+            }
+
+            total += node.size(ctx);
         }
+
         return total;
     }
 }

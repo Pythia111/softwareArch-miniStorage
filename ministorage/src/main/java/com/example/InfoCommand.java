@@ -14,17 +14,16 @@ public class InfoCommand {
      * @param pathComponents 要查找的绝对路径各段
      */
     public static void execute(Node root, String absPath) {
-        if (!PathUtil.isAbsolutePath(absPath)) {
+        PathInfo pathInfo = PathUtil.parse(absPath);
+        if (pathInfo == null) {
             return;
         }
 
-        // 严格遵循规范：路径解析绝对交由成员3的 PathUtil 负责
-        String[] pathComponents = PathUtil.split(absPath);
-        Node target = findNode(root, pathComponents);
+        Node target = NodeResolver.resolve(root, pathInfo);
 
         // 如果正确找到目标节点，打印大小
         if (target != null) {
-            System.out.println(target.getSize(new SizeContext()));
+            System.out.println(target.size());
         }
         // 如果路径不存在，按照题目要求忽略或报错但不输出内容。
     }
@@ -36,31 +35,6 @@ public class InfoCommand {
      * 注意：由于 Directory 未在本成员代码中定义，请假设其拥有 Node getChild(String name) 方法。
      */
     public static Node findNode(Node root, String[] pathComponents) {
-        Node current = root;
-
-        if (pathComponents == null) {
-            return current;
-        }
-
-        for (String component : pathComponents) {
-            // 跳过多余或者空的斜杠分段（预留扩展）
-            if (component == null || component.isEmpty()) {
-                continue;
-            }
-
-            // 通过检查该节点是否为目录来继续向下走
-            if (!current.isDirectory()) {
-                // 如果目前访问的是一个普通的文件而不是目录，那么就无法继续深入路径
-                return null;
-            }
-
-            Directory dir = (Directory) current;
-            current = dir.getChild(component);
-            if (current == null) {
-                return null; // 路径中断，遇到不存在的子节点
-            }
-        }
-
-        return current;
+        return NodeResolver.resolve(root, pathComponents);
     }
 }

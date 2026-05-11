@@ -14,54 +14,23 @@ public class TouchCommand {
      * @param size    文件大小
      */
     public static void execute(Node root, String absPath, long size) {
-        if (!PathUtil.isAbsolutePath(absPath)) {
+        PathInfo pathInfo = PathUtil.parse(absPath);
+        if (pathInfo == null) {
             return;
         }
-
-        String normalized = PathUtil.normalize(absPath);
 
         // 不能在根目录创建文件（路径必须包含文件名）
-        if (normalized.equals("/")) {
+        if (pathInfo.isRoot()) {
             return;
         }
-
-        String parentPath = PathUtil.getParentPath(normalized);
-        String fileName = PathUtil.getBaseName(normalized);
 
         // 定位父目录
-        Node parent = findNode(root, PathUtil.split(parentPath));
-        if (parent == null || !parent.isDirectory()) {
+        Directory parentDir = NodeResolver.resolveParentDirectory(root, pathInfo);
+        if (parentDir == null) {
             return;
         }
 
-        Directory parentDir = (Directory) parent;
         // 创建新文件，或覆盖任何同名节点（包括目录）
-        parentDir.putChild(fileName, new File(fileName, size));
-    }
-
-    /**
-     * 根据路径组件从根节点定位目标节点。
-     */
-    private static Node findNode(Node root, String[] pathComponents) {
-        Node current = root;
-        if (pathComponents == null) {
-            return current;
-        }
-
-        for (String component : pathComponents) {
-            if (component == null || component.isEmpty()) {
-                continue;
-            }
-            if (!current.isDirectory()) {
-                return null;
-            }
-            Directory dir = (Directory) current;
-            current = dir.getChild(component);
-            if (current == null) {
-                return null;
-            }
-        }
-
-        return current;
+        parentDir.putChild(pathInfo.getBaseName(), new File(pathInfo.getBaseName(), size));
     }
 }

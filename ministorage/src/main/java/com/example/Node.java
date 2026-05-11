@@ -26,7 +26,15 @@ public abstract class Node {
     public abstract boolean isDirectory();
 
     /**
+     * 计算当前节点大小。
+     * 供命令层直接调用，内部自动创建统计上下文。
+     */
+    public final long size() {
+        return size(new SizeContext());
+    }
+
+    /**
      * 计算当前节点大小。携带 SizeContext 上下文以去重或防环。
      */
-    public abstract long getSize(SizeContext ctx);
+    public abstract long size(SizeContext ctx);
 }

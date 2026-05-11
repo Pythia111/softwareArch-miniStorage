@@ -28,12 +28,12 @@ public class LsCommand {
      * - 若目录为空：返回空列表。
      */
     public static List<String> ls(Node root, String absPath) {
-        if (!PathUtil.isAbsolutePath(absPath)) {
+        PathInfo pathInfo = PathUtil.parse(absPath);
+        if (pathInfo == null) {
             return new ArrayList<>();
         }
 
-        String[] pathComponents = PathUtil.split(absPath);
-        Node target = findNode(root, pathComponents);
+        Node target = NodeResolver.resolve(root, pathInfo);
         if (target == null) {
             return new ArrayList<>();
         }
@@ -47,30 +47,5 @@ public class LsCommand {
         List<String> out = new ArrayList<>();
         out.add(target.getName());
         return out;
-    }
-
-    private static Node findNode(Node root, String[] pathComponents) {
-        Node current = root;
-        if (pathComponents == null) {
-            return current;
-        }
-
-        for (String component : pathComponents) {
-            if (component == null || component.isEmpty()) {
-                continue;
-            }
-
-            if (!current.isDirectory()) {
-                return null;
-            }
-
-            Directory dir = (Directory) current;
-            current = dir.getChild(component);
-            if (current == null) {
-                return null;
-            }
-        }
-
-        return current;
     }
 }

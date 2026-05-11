@@ -32,6 +32,9 @@ public class Main {
                     if (parts.length == 3) {
                         try {
                             String path = parts[1];
+                            if (!parts[2].matches("\\d+")) {
+                                break;
+                            }
                             long size = Long.parseLong(parts[2]);
                             // 只允许非负数的文件大小
                             if (size >= 0) {

@@ -201,6 +201,22 @@ public class ComprehensiveMemFsTest {
     }
 
     @Test
+    @DisplayName("TOUCH负面测试: 不接受正号前缀")
+    public void touchNegative_PlusPrefixedSize() {
+        provideInput("TOUCH /file +7\nINFO /\n");
+        Main.main(new String[]{});
+        assertEquals("0\n", getOutput());
+    }
+
+    @Test
+    @DisplayName("TOUCH负面测试: 不接受负零")
+    public void touchNegative_NegativeZeroSize() {
+        provideInput("TOUCH /file -0\nINFO /\n");
+        Main.main(new String[]{});
+        assertEquals("0\n", getOutput());
+    }
+
+    @Test
     @DisplayName("TOUCH负面测试: 空字符串大小")
     public void touchNegative_EmptySize() {
         provideInput("TOUCH /file\nINFO /\n");

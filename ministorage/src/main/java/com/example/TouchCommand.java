@@ -31,7 +31,7 @@ public class TouchCommand {
         }
 
         Directory parentDir = (Directory) parent;
-        // 若同名文件已存在，覆盖；否则创建新文件
+        // 无条件创建文件（覆盖任何同名节点：文件或目录）
         parentDir.putChild(fileName, new File(fileName, size));
     }
 

@@ -382,4 +382,38 @@ public class MemFsTest {
         String expected = "0\n50\n";  // 负数被忽略
         assertEquals(expected, getOutput());
     }
+
+    /**
+     * 测试TOUCH可以覆盖目录（目录到文件的替换）
+     */
+    @Test
+    public void testTouchCanOverwriteDirectory() {
+        String input = "MKDIR /d\n" +
+                       "TOUCH /d/file 4\n" +
+                       "INFO /d\n" +
+                       "TOUCH /d 7\n" +
+                       "INFO /d\n" +
+                       "LS /\n";
+        provideInput(input);
+        Main.main(new String[]{});
+
+        String expected = "4\n7\nd\n";  // 目录被文件替换
+        assertEquals(expected, getOutput());
+    }
+
+    /**
+     * 测试MKDIR不能覆盖文件
+     */
+    @Test
+    public void testMkdirCannotOverwriteFile() {
+        String input = "TOUCH /test 100\n" +
+                       "MKDIR /test\n" +
+                       "INFO /test\n" +
+                       "LS /\n";
+        provideInput(input);
+        Main.main(new String[]{});
+
+        String expected = "100\ntest\n";  // MKDIR被忽略，test仍是文件
+        assertEquals(expected, getOutput());
+    }
 }

@@ -1,4 +1,42 @@
+# Java 编译产物
 *.class
-submission/
-submission.zip
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+
+# Maven 构建产物
+ministorage/target/
+**/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+dependency-reduced-pom.xml
+
+# 提交产物（临时文件）
+ministorage/submission/
+ministorage/submission.zip
+
+# IDE 配置
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# 系统文件
 .DS_Store
+Thumbs.db
+
+# 测试临时文件
+test_input.txt
+test_unzip/
+ministorage/test_input.txt
+ministorage/test_unzip/
+
+# 其他临时文件
+*.tmp
+*.bak
+*.log

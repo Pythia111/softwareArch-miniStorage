@@ -1,8 +1,11 @@
 package com.example.path;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * 路径工具类：负责绝对路径的解析。
- * 迭代一只接受规范的绝对路径，不对输入做自动规范化。
+ * 路径工具类：负责绝对路径的解析与规范化。
+ * 迭代二支持冗余/、.、..的自动规范化。
  */
 public class PathUtil {
 
@@ -10,71 +13,57 @@ public class PathUtil {
         return path != null && !path.isEmpty() && path.startsWith("/");
     }
 
-    public static boolean isCanonicalAbsolutePath(String path) {
-        if (!isAbsolutePath(path)) {
-            return false;
-        }
-        if ("/".equals(path)) {
-            return true;
-        }
-        return !path.endsWith("/") && !path.contains("//") && !hasDotSegments(path);
-    }
-
-    private static boolean hasDotSegments(String path) {
-        String[] components = split(path);
-        if (components == null) {
-            return false;
-        }
-
-        for (String component : components) {
-            if (".".equals(component) || "..".equals(component)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /**
-     * 迭代一不对绝对路径做自动规范化，保留原始输入。
-     * 迭代二若需要支持冗余 /、.、..，可在此处扩展。
+     * 规范化绝对路径：处理冗余/、.、..、尾随/。
+     * 非绝对路径（null、空串、不以/开头）返回null。
      */
     public static String normalize(String absPath) {
-        if (!isAbsolutePath(absPath)) {
-            return "/";
+        if (absPath == null || !absPath.startsWith("/")) {
+            return null;
         }
-        return absPath;
+
+        // 分割路径，连续/视为一个分隔符
+        String[] parts = absPath.split("/+");
+
+        // 使用栈处理 . 和 ..
+        List<String> stack = new ArrayList<>();
+        for (String part : parts) {
+            if (part.isEmpty() || part.equals(".")) {
+                continue;
+            } else if (part.equals("..")) {
+                if (!stack.isEmpty()) {
+                    stack.remove(stack.size() - 1);
+                }
+            } else {
+                stack.add(part);
+            }
+        }
+
+        if (stack.isEmpty()) return "/";
+        return "/" + String.join("/", stack);
     }
 
     /**
-     * 将绝对路径拆分为路径组件数组。
+     * 将已规范化的绝对路径拆分为路径组件数组。
+     * 输入必须是normalize()的输出。
      * 例：/a/b/c → ["a", "b", "c"]
      * 根路径 / → []
      */
-    public static String[] split(String absPath) {
-        if (!isAbsolutePath(absPath)) {
-            return null;
-        }
-        if (absPath.equals("/")) {
-            return new String[0];
-        }
-        // 保留空片段，交由上层判断路径是否合法。
-        String trimmed = absPath.substring(1);
-        return trimmed.split("/", -1);
+    public static String[] split(String normalizedPath) {
+        if (normalizedPath.equals("/")) return new String[0];
+        return normalizedPath.substring(1).split("/");
     }
 
     /**
      * 获取父路径。
-     * 例：/a/b/c → /a/b，/a → /，/ → /
+     * 输入必须是normalize()的输出。
+     * 例：/a/b/c → /a/b，/a → /，/ → null
      */
-    public static String getParentPath(String absPath) {
-        if (absPath.equals("/")) {
-            return "/";
-        }
-        int lastSlash = absPath.lastIndexOf('/');
-        if (lastSlash == 0) {
-            return "/";
-        }
-        return absPath.substring(0, lastSlash);
+    public static String getParentPath(String normalizedPath) {
+        if (normalizedPath.equals("/")) return null;
+        int lastSlash = normalizedPath.lastIndexOf('/');
+        if (lastSlash == 0) return "/";
+        return normalizedPath.substring(0, lastSlash);
     }
 
     /**
@@ -91,14 +80,14 @@ public class PathUtil {
 
     /**
      * 解析绝对路径并返回基础路径元信息。
-     * 迭代一只做最小规范化；迭代二可在本方法内部扩展 . / .. 语义。
+     * 先规范化，再拆分。非法路径返回null。
      */
     public static PathInfo parse(String absPath) {
-        if (!isCanonicalAbsolutePath(absPath)) {
+        String normalized = normalize(absPath);
+        if (normalized == null) {
             return null;
         }
 
-        String normalized = normalize(absPath);
         return new PathInfo(
             normalized,
             split(normalized),

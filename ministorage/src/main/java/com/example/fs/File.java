@@ -1,10 +1,7 @@
 package com.example.fs;
 
-/**
- * 文件类，模拟一个普通文件节点，包含文件的大小信息。
- */
 public class File extends Node {
-    private final long size;
+    private long size;
 
     public File(String name, long size) {
         super(name);
@@ -16,18 +13,12 @@ public class File extends Node {
         return NodeType.FILE;
     }
 
-    @Override
-    public boolean isDirectory() {
-        return false;
+    public void setSize(long size) {
+        this.size = size;
     }
 
     @Override
     public long size(SizeContext ctx) {
-        // 如果该节点已经被访问过了，直接返回0，预留防环机制
-        if (ctx.isVisited(this)) {
-            return 0;
-        }
-        ctx.addVisited(this);
         return size;
     }
 }

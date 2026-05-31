@@ -60,7 +60,10 @@ public class Main {
 
                     case "INFO":
                         if (firstArg != null && secondArg == null && !hasExtraArgs) {
-                            memFs.info(firstArg);
+                            Long size = memFs.info(firstArg);
+                            if (size != null) {
+                                System.out.print(size + "\n");
+                            }
                         }
                         break;
 

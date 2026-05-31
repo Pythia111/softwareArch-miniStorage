@@ -1,6 +1,5 @@
 package com.example;
 
-import com.example.command.InfoCommand;
 import com.example.command.LsCommand;
 import com.example.command.MkdirCommand;
 import com.example.command.TouchCommand;
@@ -24,55 +23,65 @@ public class MemFs {
 
     /**
      * 根据绝对路径定位节点
+     * 
      * @param absPath 原始路径(未规范化)
      * @return 找到的节点,不存在返回null
      */
     private Node locateNode(String absPath) {
         String normalized = PathUtil.normalize(absPath);
-        if (normalized == null) return null;
-        if (normalized.equals("/")) return root;
+        if (normalized == null)
+            return null;
+        if (normalized.equals("/"))
+            return root;
 
         String[] parts = PathUtil.split(normalized);
         Node current = root;
         for (String part : parts) {
-            if (!(current instanceof Directory)) return null;
-            current = ((Directory)current).getChild(part);
-            if (current == null) return null;
+            if (!(current instanceof Directory))
+                return null;
+            current = ((Directory) current).getChild(part);
+            if (current == null)
+                return null;
         }
         return current;
     }
 
     /**
      * 获取父目录
+     * 
      * @param absPath 原始路径(未规范化)
      * @return 父目录,不存在或父路径不是目录返回null
      */
     private Directory getParentDirectory(String absPath) {
         String normalized = PathUtil.normalize(absPath);
-        if (normalized == null || normalized.equals("/")) return null;
+        if (normalized == null || normalized.equals("/"))
+            return null;
 
         String parentPath = PathUtil.getParentPath(normalized);
         Node parent = locateNode(parentPath);
-        return (parent instanceof Directory) ? (Directory)parent : null;
+        return (parent instanceof Directory) ? (Directory) parent : null;
     }
 
     /**
      * 解析链接到最终节点
+     * 
      * @param node 原始节点
      * @return 如果是Link返回target,否则返回自身
      */
     private Node resolveLink(Node node) {
-        return (node instanceof Link) ? ((Link)node).getTarget() : node;
+        return (node instanceof Link) ? ((Link) node).getTarget() : node;
     }
 
     /**
      * 获取路径的最后一个组件
+     * 
      * @param absPath 原始路径(未规范化)
      * @return 名称,根目录返回null
      */
     private String getBaseName(String absPath) {
         String normalized = PathUtil.normalize(absPath);
-        if (normalized == null || normalized.equals("/")) return null;
+        if (normalized == null || normalized.equals("/"))
+            return null;
         return PathUtil.getBaseName(normalized);
     }
 
@@ -108,20 +117,25 @@ public class MemFs {
     }
 
     /**
-     * 输出该节点的大小。
-     * 如果是目录，需递归计算总大小。
+     * 输出节点的大小。
      *
      * @param absPath 绝对路径
      */
-    public void info(String absPath) {
-        InfoCommand.execute(root, absPath);
+    public Long info(String absPath) {
+        Node node = locateNode(absPath);
+        if (node == null)
+            return null;
+
+        Node target = resolveLink(node);
+
+        return target.size(new com.example.fs.SizeContext());
     }
 
     /**
      * 查找指定名称的节点。
      * 递归搜索，按字典序输出所有匹配路径。
      *
-     * @param absPath 起始路径
+     * @param absPath    起始路径
      * @param targetName 要查找的节点名称
      */
     public void find(String absPath, String targetName) {

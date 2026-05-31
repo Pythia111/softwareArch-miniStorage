@@ -23,7 +23,7 @@ public class LsCommand {
     public static void execute(Node root, String absPath) {
         List<String> lines = ls(root, absPath);
         for (String line : lines) {
-            System.out.println(line);
+            System.out.print(line + "\n");
         }
     }
 

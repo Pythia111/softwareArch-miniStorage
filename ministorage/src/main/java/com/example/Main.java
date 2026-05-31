@@ -64,6 +64,24 @@ public class Main {
                         }
                         break;
 
+                    case "FIND":
+                        if (firstArg != null && secondArg != null && !hasExtraArgs) {
+                            memFs.find(firstArg, secondArg);
+                        }
+                        break;
+
+                    case "RM":
+                        if (firstArg != null && secondArg == null && !hasExtraArgs) {
+                            memFs.rm(firstArg);
+                        }
+                        break;
+
+                    case "LINK":
+                        if (firstArg != null && secondArg != null && !hasExtraArgs) {
+                            memFs.link(firstArg, secondArg);
+                        }
+                        break;
+
                     default:
                         // 未知命令，静默忽略
                         break;

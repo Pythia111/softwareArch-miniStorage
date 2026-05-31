@@ -386,53 +386,55 @@ public class ComprehensiveMemFsTest {
     }
 
     // ==================== 路径处理测试 ====================
+    // 注意：迭代二支持路径规范化，会自动处理多余斜杠、.和..
+    // 以下测试已根据迭代二的规范化行为调整
 
     @Test
-    @DisplayName("路径测试: 多余斜杠")
+    @DisplayName("路径测试: 多余斜杠会被规范化")
     public void pathTest_RedundantSlashes() {
         provideInput("TOUCH /file1 10\nMKDIR ///usr///\nTOUCH //usr//file 100\nINFO /\n");
         Main.main(new String[]{});
-        assertEquals("10\n", getOutput());
+        assertEquals("110\n", getOutput());  // 迭代二：规范化后file1(10) + usr/file(100)
     }
 
     @Test
-    @DisplayName("路径测试: 根目录仅接受单斜杠表示")
+    @DisplayName("路径测试: 根目录的多种表示方式都会被规范化为/")
     public void pathTest_RootVariations() {
         provideInput("TOUCH /file1 10\nINFO /\nINFO //\nINFO ///\nLS /\n");
         Main.main(new String[]{});
-        assertEquals("10\nfile1\n", getOutput());
+        assertEquals("10\n10\n10\nfile1\n", getOutput());  // 迭代二：//和///都规范化为/
     }
 
     @Test
-    @DisplayName("路径测试: 末尾斜杠视为非法路径")
+    @DisplayName("路径测试: 末尾斜杠会被规范化")
     public void pathTest_TrailingSlash() {
         provideInput("MKDIR /dir/\nMKDIR /dir\nTOUCH /dir/file/ 100\nTOUCH /dir/file 100\nLS /dir/\nINFO /dir\n");
         Main.main(new String[]{});
-        assertEquals("100\n", getOutput());
+        assertEquals("file\n100\n", getOutput());  // 迭代二：末尾斜杠被规范化
     }
 
     @Test
-    @DisplayName("路径测试: 点号视为非法路径")
-    public void pathTest_DotAsLiteralName() {
-        provideInput("MKDIR /dir\nTOUCH /dir/. 100\nINFO /dir/.\nINFO /dir\nLS /dir\n");
+    @DisplayName("路径测试: .代表当前目录")
+    public void pathTest_DotAsCurrentDirectory() {
+        provideInput("MKDIR /dir\nTOUCH /dir/file 100\nINFO /dir/.\nINFO /dir\nLS /dir/.\n");
         Main.main(new String[]{});
-        assertEquals("0\n", getOutput());
+        assertEquals("100\n100\nfile\n", getOutput());  // 迭代二：. 表示当前目录
     }
 
     @Test
-    @DisplayName("路径测试: 双点视为非法路径")
-    public void pathTest_DotDotAsLiteralName() {
-        provideInput("MKDIR /dir\nTOUCH /dir/.. 7\nINFO /dir/..\nINFO /dir\nLS /dir\n");
+    @DisplayName("路径测试: ..代表父目录")
+    public void pathTest_DotDotAsParentDirectory() {
+        provideInput("MKDIR /a\nMKDIR /a/b\nTOUCH /a/file 7\nINFO /a/b/..\nLS /a/b/..\n");
         Main.main(new String[]{});
-        assertEquals("0\n", getOutput());
+        assertEquals("7\nb\nfile\n", getOutput());  // 迭代二：.. 返回父目录
     }
 
     @Test
-    @DisplayName("路径测试: 点路径视为非法路径")
-    public void pathTest_DotPathsDoNotNavigate() {
-        provideInput("MKDIR /a\nMKDIR /a/..\nINFO /a\nLS /a\n");
+    @DisplayName("路径测试: 点路径会被规范化并导航")
+    public void pathTest_DotPathsNavigate() {
+        provideInput("MKDIR /a\nTOUCH /a/file 10\nINFO /a/../a\nLS /a/../a\n");
         Main.main(new String[]{});
-        assertEquals("0\n", getOutput());
+        assertEquals("10\nfile\n", getOutput());  // 迭代二：/a/../a 规范化为 /a
     }
 
     // ==================== 覆盖行为测试 ====================

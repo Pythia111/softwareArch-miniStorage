@@ -8,6 +8,12 @@ import com.example.fs.Link;
 import com.example.fs.Node;
 import com.example.path.PathUtil;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * 微型内存文件系统外观类。
  * 持有根目录实例，对外提供统一的命令接口。
@@ -108,12 +114,30 @@ public class MemFs {
 
     /**
      * 列出路径下的所有直接子节点。
-     * 如果目标是文件，则只输出文件名。
+     * 如果目标是文件或链接到文件，返回链接自身名称。
+     * 如果目标是目录或链接到目录，返回子节点列表（字典序）。
+     * 如果路径不存在，返回空列表。
      *
      * @param absPath 绝对路径
+     * @return 子节点名称列表
      */
-    public void ls(String absPath) {
-        LsCommand.execute(root, absPath);
+    public List<String> ls(String absPath) {
+        Node node = locateNode(absPath);
+        if (node == null)
+            return Collections.emptyList();
+
+        // 跟随链接
+        Node target = resolveLink(node);
+
+        if (target.isFile()) {
+            // 链接到文件时,返回链接自身名称
+            return Collections.singletonList(node.getName());
+        } else if (target.isDirectory()) {
+            // 目录或链接到目录,返回子节点列表
+            return new ArrayList<>(((Directory) target).listChildren());
+        }
+
+        return Collections.emptyList();
     }
 
     /**
@@ -134,13 +158,59 @@ public class MemFs {
     /**
      * 查找指定名称的节点。
      * 递归搜索，按字典序输出所有匹配路径。
+     * 如果起点是文件或链接到文件，只检查该起点自身名称是否匹配。
+     * 如果起点是目录或链接到目录，递归搜索该目录子树。
+     * 链接节点本身也可以作为匹配结果，匹配的是链接名称。
+     * 防重复：同一个底层目录在一次FIND中最多展开一次。
      *
      * @param absPath    起始路径
      * @param targetName 要查找的节点名称
+     * @return 匹配的绝对路径列表（字典序升序）
      */
-    public void find(String absPath, String targetName) {
-        // 阶段3由成员2实现
-        throw new UnsupportedOperationException("FIND命令待实现");
+    public List<String> find(String absPath, String targetName) {
+        Node startNode = locateNode(absPath);
+        if (startNode == null)
+            return Collections.emptyList();
+
+        List<String> results = new ArrayList<>();
+        Set<Directory> visitedDirs = new HashSet<>();
+
+        // 规范化路径作为当前路径前缀
+        String normalized = PathUtil.normalize(absPath);
+        findRecursive(startNode, normalized, targetName, results, visitedDirs);
+
+        Collections.sort(results);
+        return results;
+    }
+
+    /**
+     * 递归搜索节点子树。
+     */
+    private void findRecursive(Node node, String currentPath, String targetName,
+            List<String> results, Set<Directory> visitedDirs) {
+        // 检查当前节点名称是否匹配
+        if (node.getName().equals(targetName)) {
+            results.add(currentPath);
+        }
+
+        // 如果是目录或链接到目录,递归搜索
+        Node target = resolveLink(node);
+        if (target.isDirectory()) {
+            Directory dir = (Directory) target;
+
+            // 防重复:同一底层目录只展开一次
+            if (visitedDirs.contains(dir))
+                return;
+            visitedDirs.add(dir);
+
+            for (String childName : dir.listChildren()) {
+                Node child = dir.getChild(childName);
+                String childPath = currentPath.equals("/")
+                        ? "/" + childName
+                        : currentPath + "/" + childName;
+                findRecursive(child, childPath, targetName, results, visitedDirs);
+            }
+        }
     }
 
     /**

@@ -3,6 +3,7 @@ package com.example;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
@@ -54,7 +55,10 @@ public class Main {
 
                     case "LS":
                         if (firstArg != null && secondArg == null && !hasExtraArgs) {
-                            memFs.ls(firstArg);
+                            List<String> lsResult = memFs.ls(firstArg);
+                            for (String s : lsResult) {
+                                System.out.print(s + "\n");
+                            }
                         }
                         break;
 
@@ -69,7 +73,10 @@ public class Main {
 
                     case "FIND":
                         if (firstArg != null && secondArg != null && !hasExtraArgs) {
-                            memFs.find(firstArg, secondArg);
+                            List<String> findResult = memFs.find(firstArg, secondArg);
+                            for (String s : findResult) {
+                                System.out.print(s + "\n");
+                            }
                         }
                         break;
 

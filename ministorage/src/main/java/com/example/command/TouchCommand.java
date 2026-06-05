@@ -15,6 +15,8 @@ public class TouchCommand {
 
     /**
      * 执行 TOUCH 命令。
+     * - 如果目标路径已存在文件，覆盖其大小
+     * - 如果目标路径已存在目录或链接，用新文件替换该目录项
      *
      * @param root    根目录节点
      * @param absPath 要创建的文件的绝对路径
@@ -32,7 +34,15 @@ public class TouchCommand {
             return;
         }
 
-        // 创建新文件，或覆盖任何同名节点（包括目录）
-        parentDir.putChild(pathInfo.getBaseName(), new File(pathInfo.getBaseName(), size));
+        String name = pathInfo.getBaseName();
+        Node existing = parentDir.getChild(name);
+
+        // 如果已存在文件，只覆盖大小
+        if (existing != null && existing.isFile()) {
+            ((File) existing).setSize(size);
+        } else {
+            // 创建新文件（会自动覆盖目录或链接）
+            parentDir.putChild(name, new File(name, size));
+        }
     }
 }

@@ -60,14 +60,12 @@ public class FindCommand {
     /**
      * 递归查找匹配的节点
      *
-     * 注意：只有起点节点是链接时才跟随链接，遍历过程中遇到链接节点只检查链接本身的名称，不进入链接指向的目录
-     *
      * @param node        当前节点
      * @param currentPath 当前路径
      * @param targetName  目标名称
      * @param results     结果列表
      * @param visitedDirs 已访问的目录集合（防重复）
-     * @param isStartNode 是否为起点节点（起点节点如果是链接需要跟随）
+     * @param isStartNode 是否为起点节点
      */
     private static void findRecursive(Node node, String currentPath, String targetName,
                                       List<String> results, Set<Directory> visitedDirs, boolean isStartNode) {
@@ -76,17 +74,16 @@ public class FindCommand {
             results.add(currentPath);
         }
 
-        // 判断是否需要跟随链接：只有起点节点是链接时才跟随
+        // 起点或遍历时遇到链接都需要跟随，但要优先处理非链接子节点
         Node target = node;
-        if (isStartNode && node instanceof Link) {
-            // 递归解析链接链：lnk2 -> lnk1 -> dir
-            target = node;
+        if (isStartNode || node instanceof Link) {
+            // 递归解析链接链
             while (target instanceof Link) {
                 target = ((Link) target).getTarget();
             }
         }
 
-        // 如果是目录，递归搜索子节点（注意：子节点如果是链接，不跟随）
+        // 如果是目录，递归搜索子节点
         if (target.isDirectory()) {
             Directory dir = (Directory) target;
 
@@ -96,13 +93,35 @@ public class FindCommand {
             }
             visitedDirs.add(dir);
 
-            // 递归搜索所有子节点
+            // 优先遍历非链接节点，再遍历链接节点
+            // 这样确保优先报告通过真实路径访问的文件
+            List<String> nonLinkChildren = new ArrayList<>();
+            List<String> linkChildren = new ArrayList<>();
+
             for (String childName : dir.listChildren()) {
+                Node child = dir.getChild(childName);
+                if (child instanceof Link) {
+                    linkChildren.add(childName);
+                } else {
+                    nonLinkChildren.add(childName);
+                }
+            }
+
+            // 先处理非链接子节点
+            for (String childName : nonLinkChildren) {
                 Node child = dir.getChild(childName);
                 String childPath = currentPath.equals("/")
                         ? "/" + childName
                         : currentPath + "/" + childName;
-                // 子节点不是起点节点，所以isStartNode传false
+                findRecursive(child, childPath, targetName, results, visitedDirs, false);
+            }
+
+            // 再处理链接子节点
+            for (String childName : linkChildren) {
+                Node child = dir.getChild(childName);
+                String childPath = currentPath.equals("/")
+                        ? "/" + childName
+                        : currentPath + "/" + childName;
                 findRecursive(child, childPath, targetName, results, visitedDirs, false);
             }
         }

@@ -127,7 +127,7 @@ public class FindLinkBehaviorTest {
 
     @Test
     void testFind_containerWithOnlyLinks() {
-        // 容器目录只包含链接节点，遍历时不跟随链接
+        // 容器目录只包含链接节点，遍历时会跟随链接
         fs.mkdir("/real");
         fs.touch("/real/file.txt", 1);
 
@@ -135,9 +135,12 @@ public class FindLinkBehaviorTest {
         fs.link("/real", "/container/lnk1");
         fs.link("/real", "/container/lnk2");
 
-        // 在container下找file.txt，应该找不到（因为不跟随链接）
+        // 在container下找file.txt，会跟随链接进入/real
+        // lnk1和lnk2都指向同一个/real目录
+        // 由于优先处理非链接子节点，且visitedDirs去重，只会通过lnk1找到一次
         List<String> result = fs.find("/container", "file.txt");
-        assertTrue(result.isEmpty());
+        assertEquals(1, result.size());
+        assertEquals("/container/lnk1/file.txt", result.get(0));
 
         // 但可以找到链接本身的名称
         List<String> linkResult = fs.find("/container", "lnk1");

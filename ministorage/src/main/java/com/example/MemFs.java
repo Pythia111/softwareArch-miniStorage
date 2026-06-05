@@ -1,6 +1,7 @@
 package com.example;
 
 import com.example.command.LsCommand;
+import com.example.command.LinkCommand;
 import com.example.command.MkdirCommand;
 import com.example.command.TouchCommand;
 import com.example.fs.Directory;
@@ -232,7 +233,6 @@ public class MemFs {
      * @param dstPath 目标路径
      */
     public void link(String srcPath, String dstPath) {
-        // 阶段3由成员3实现
-        throw new UnsupportedOperationException("LINK命令待实现");
+        LinkCommand.execute(root, srcPath, dstPath);
     }
 }

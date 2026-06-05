@@ -32,10 +32,10 @@ public class InfoCommand {
             return null;
         }
 
-        // 跟随链接
+        // 递归跟随链接链到最终目标节点
         Node target = node;
-        if (node instanceof Link) {
-            target = ((Link) node).getTarget();
+        while (target instanceof Link) {
+            target = ((Link) target).getTarget();
         }
 
         return target.size(new SizeContext());

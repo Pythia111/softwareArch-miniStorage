@@ -17,12 +17,18 @@ public class TouchCommand {
      * 执行 TOUCH 命令。
      * - 如果目标路径已存在文件，覆盖其大小
      * - 如果目标路径已存在目录或链接，用新文件替换该目录项
+     * - 大小必须是非负整数，否则忽略该命令
      *
      * @param root    根目录节点
      * @param absPath 要创建的文件的绝对路径
      * @param size    文件大小
      */
     public static void execute(Node root, String absPath, long size) {
+        // 大小必须是非负整数
+        if (size < 0) {
+            return;
+        }
+
         PathInfo pathInfo = PathUtil.parseNonRoot(absPath);
         if (pathInfo == null) {
             return;

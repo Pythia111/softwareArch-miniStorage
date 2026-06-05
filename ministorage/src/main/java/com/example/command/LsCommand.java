@@ -39,10 +39,10 @@ public class LsCommand {
             return new ArrayList<>();
         }
 
-        // 跟随链接到目标节点
+        // 递归跟随链接链到最终目标节点
         Node target = node;
-        if (node instanceof Link) {
-            target = ((Link) node).getTarget();
+        while (target instanceof Link) {
+            target = ((Link) target).getTarget();
         }
 
         // 如果目标是文件，返回原节点（可能是链接）的名称

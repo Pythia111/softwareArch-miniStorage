@@ -275,13 +275,14 @@ public class Member3MkdirLinkTest {
         memFs.touch("/real/a.txt", 10);
         memFs.link("/real", "/view");
 
-        // NodeResolver 不跟踪链接路径，touch 通过链接路径会静默忽略
+        // 根据需求文档示例2：通过链接路径可以操作目标目录
         memFs.touch("/view/b.txt", 5);
         List<String> realChildren = memFs.ls("/real");
-        assertEquals(1, realChildren.size(), "touch 通过链接路径不会跟踪链接，仅原路径可操作");
+        assertEquals(2, realChildren.size(), "通过链接路径创建的文件应出现在目标目录中");
         assertTrue(realChildren.contains("a.txt"));
+        assertTrue(realChildren.contains("b.txt"));
 
-        // 但 ls 和 info 可以通过链接路径正常工作（MemFs.ls/info 使用 resolveLink）
+        // ls 和 info 通过链接路径正常工作
         List<String> viewChildren = memFs.ls("/view");
         assertEquals(realChildren, viewChildren, "ls 通过链接路径应返回目标目录的子节点");
     }
@@ -549,9 +550,9 @@ public class Member3MkdirLinkTest {
         memFs.link("/real", "/view");
         memFs.mkdir("/view/subdir");
 
-        // mkdir 无法通过链接路径操作
+        // 根据需求：通过链接路径可以在目标目录中创建子目录
         Directory real = (Directory) root.getChild("real");
-        assertNull(real.getChild("subdir"), "mkdir 不跟踪链接路径，subdir 不应被创建");
+        assertNotNull(real.getChild("subdir"), "通过链接路径可以创建子目录");
     }
 
     @Test

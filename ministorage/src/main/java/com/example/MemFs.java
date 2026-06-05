@@ -2,17 +2,22 @@ package com.example;
 
 import com.example.command.FindCommand;
 import com.example.command.InfoCommand;
-import com.example.command.LinkCommand;
 import com.example.command.LsCommand;
+import com.example.command.LinkCommand;
 import com.example.command.MkdirCommand;
 import com.example.command.RmCommand;
 import com.example.command.TouchCommand;
 import com.example.fs.Directory;
 import com.example.fs.Link;
 import com.example.fs.Node;
+import com.example.fs.SizeContext;
 import com.example.path.PathUtil;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 微型内存文件系统外观类。
@@ -29,7 +34,7 @@ public class MemFs {
 
     /**
      * 根据绝对路径定位节点
-     *
+     * 
      * @param absPath 原始路径(未规范化)
      * @return 找到的节点,不存在返回null
      */
@@ -54,7 +59,7 @@ public class MemFs {
 
     /**
      * 获取父目录
-     *
+     * 
      * @param absPath 原始路径(未规范化)
      * @return 父目录,不存在或父路径不是目录返回null
      */
@@ -69,18 +74,21 @@ public class MemFs {
     }
 
     /**
-     * 解析链接到最终节点
+     * 解析链接到最终节点（递归解析链接链）
      *
      * @param node 原始节点
-     * @return 如果是Link返回target,否则返回自身
+     * @return 如果是Link返回最终target,否则返回自身
      */
     private Node resolveLink(Node node) {
-        return (node instanceof Link) ? ((Link) node).getTarget() : node;
+        while (node instanceof Link) {
+            node = ((Link) node).getTarget();
+        }
+        return node;
     }
 
     /**
      * 获取路径的最后一个组件
-     *
+     * 
      * @param absPath 原始路径(未规范化)
      * @return 名称,根目录返回null
      */
@@ -122,17 +130,37 @@ public class MemFs {
      * @return 子节点名称列表
      */
     public List<String> ls(String absPath) {
-        return LsCommand.execute(root, absPath);
+        Node node = locateNode(absPath);
+        if (node == null)
+            return Collections.emptyList();
+
+        // 跟随链接
+        Node target = resolveLink(node);
+
+        if (target.isFile()) {
+            // 链接到文件时,返回链接自身名称
+            return Collections.singletonList(node.getName());
+        } else if (target.isDirectory()) {
+            // 目录或链接到目录,返回子节点列表
+            return new ArrayList<>(((Directory) target).listChildren());
+        }
+
+        return Collections.emptyList();
     }
 
     /**
      * 输出节点的大小。
      *
      * @param absPath 绝对路径
-     * @return 节点大小，如果路径不存在返回null
      */
     public Long info(String absPath) {
-        return InfoCommand.execute(root, absPath);
+        Node node = locateNode(absPath);
+        if (node == null)
+            return null;
+
+        Node target = resolveLink(node);
+
+        return target.size(new SizeContext());
     }
 
     /**
@@ -148,7 +176,64 @@ public class MemFs {
      * @return 匹配的绝对路径列表（字典序升序）
      */
     public List<String> find(String absPath, String targetName) {
-        return FindCommand.execute(root, absPath, targetName);
+        Node startNode = locateNode(absPath);
+        if (startNode == null)
+            return Collections.emptyList();
+
+        List<String> results = new ArrayList<>();
+        Set<Directory> visitedDirs = new HashSet<>();
+
+        // 规范化路径作为当前路径前缀
+        String normalized = PathUtil.normalize(absPath);
+        findRecursive(startNode, normalized, targetName, results, visitedDirs, true);
+
+        Collections.sort(results);
+        return results;
+    }
+
+    /**
+     * 递归搜索节点子树。
+     *
+     * @param node 当前节点
+     * @param currentPath 当前路径
+     * @param targetName 目标名称
+     * @param results 结果列表
+     * @param visitedDirs 已访问目录集合
+     * @param isStartNode 是否为起点节点（起点为链接时需要跟随）
+     */
+    private void findRecursive(Node node, String currentPath, String targetName,
+            List<String> results, Set<Directory> visitedDirs, boolean isStartNode) {
+        // 检查当前节点名称是否匹配
+        if (node.getName().equals(targetName)) {
+            results.add(currentPath);
+        }
+
+        // 只在起点时跟随链接，遍历时不跟随链接子节点
+        Node target = node;
+        if (isStartNode) {
+            // 递归解析链接链
+            while (target instanceof Link) {
+                target = ((Link) target).getTarget();
+            }
+        }
+
+        if (target.isDirectory()) {
+            Directory dir = (Directory) target;
+
+            // 防重复:同一底层目录只展开一次
+            if (visitedDirs.contains(dir))
+                return;
+            visitedDirs.add(dir);
+
+            // 遍历所有子节点
+            for (String childName : dir.listChildren()) {
+                Node child = dir.getChild(childName);
+                String childPath = currentPath.equals("/")
+                        ? "/" + childName
+                        : currentPath + "/" + childName;
+                findRecursive(child, childPath, targetName, results, visitedDirs, false);
+            }
+        }
     }
 
     /**
@@ -172,4 +257,3 @@ public class MemFs {
         LinkCommand.execute(root, srcPath, dstPath);
     }
 }
-

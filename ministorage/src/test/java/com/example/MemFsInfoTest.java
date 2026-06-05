@@ -77,6 +77,16 @@ public class MemFsInfoTest {
     }
 
     @Test
+    public void testInfoDeduplicatesLinkToLinkChain() {
+        memFs.touch("/file1", 100L);
+        memFs.link("/file1", "/link1");
+        memFs.link("/link1", "/link2");
+
+        assertEquals(100L, memFs.info("/link2"));
+        assertEquals(100L, memFs.info("/"));
+    }
+
+    @Test
     public void testInfoInvalidPath() {
         assertNull(memFs.info("/invalid/path"));
         assertNull(memFs.info("invalid_prefix/file")); // not an absolute path?

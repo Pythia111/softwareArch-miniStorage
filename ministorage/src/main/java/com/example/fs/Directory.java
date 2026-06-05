@@ -2,7 +2,6 @@ package com.example.fs;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import java.util.TreeMap;
 
 public class Directory extends Node {
@@ -54,9 +53,10 @@ public class Directory extends Node {
     public long size(SizeContext ctx) {
         long total = 0;
         for (Node child : children.values()) {
-            Node realNode = (child instanceof Link)
-                ? ((Link)child).getTarget()
-                : child;
+            Node realNode = child;
+            while (realNode instanceof Link) {
+                realNode = ((Link) realNode).getTarget();
+            }
 
             if (!ctx.isVisited(realNode)) {
                 ctx.markVisited(realNode);

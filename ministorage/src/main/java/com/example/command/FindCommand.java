@@ -48,9 +48,9 @@ public class FindCommand {
         List<String> results = new ArrayList<>();
         Set<Directory> visitedDirs = new HashSet<>();
 
-        // 递归查找
+        // 递归查找（起点节点传true，表示如果是链接需要跟随）
         String normalizedPath = pathInfo.getNormalizedPath();
-        findRecursive(startNode, normalizedPath, targetName, results, visitedDirs);
+        findRecursive(startNode, normalizedPath, targetName, results, visitedDirs, true);
 
         // 按字典序排序输出
         Collections.sort(results);
@@ -60,26 +60,33 @@ public class FindCommand {
     /**
      * 递归查找匹配的节点
      *
+     * 注意：只有起点节点是链接时才跟随链接，遍历过程中遇到链接节点只检查链接本身的名称，不进入链接指向的目录
+     *
      * @param node        当前节点
      * @param currentPath 当前路径
      * @param targetName  目标名称
      * @param results     结果列表
      * @param visitedDirs 已访问的目录集合（防重复）
+     * @param isStartNode 是否为起点节点（起点节点如果是链接需要跟随）
      */
     private static void findRecursive(Node node, String currentPath, String targetName,
-                                      List<String> results, Set<Directory> visitedDirs) {
+                                      List<String> results, Set<Directory> visitedDirs, boolean isStartNode) {
         // 检查当前节点名称是否匹配
         if (node.getName().equals(targetName)) {
             results.add(currentPath);
         }
 
-        // 解析链接，获取目标节点
+        // 判断是否需要跟随链接：只有起点节点是链接时才跟随
         Node target = node;
-        if (node instanceof Link) {
-            target = ((Link) node).getTarget();
+        if (isStartNode && node instanceof Link) {
+            // 递归解析链接链：lnk2 -> lnk1 -> dir
+            target = node;
+            while (target instanceof Link) {
+                target = ((Link) target).getTarget();
+            }
         }
 
-        // 如果是目录，递归搜索子节点
+        // 如果是目录，递归搜索子节点（注意：子节点如果是链接，不跟随）
         if (target.isDirectory()) {
             Directory dir = (Directory) target;
 
@@ -95,7 +102,8 @@ public class FindCommand {
                 String childPath = currentPath.equals("/")
                         ? "/" + childName
                         : currentPath + "/" + childName;
-                findRecursive(child, childPath, targetName, results, visitedDirs);
+                // 子节点不是起点节点，所以isStartNode传false
+                findRecursive(child, childPath, targetName, results, visitedDirs, false);
             }
         }
     }

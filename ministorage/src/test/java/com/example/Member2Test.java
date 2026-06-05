@@ -257,7 +257,7 @@ public class Member2Test {
 
     @Test
     public void testFindDedupTwoLinksToSameDir() {
-        // 两个链接指向同一个底层目录，防重复展开
+        // 遍历时不跟随链接：container下有两个链接，但FIND不会进入链接指向的目录
         Directory real = new Directory("real");
         root.putChild("real", real);
         real.putChild("file.txt", new File("file.txt", 1));
@@ -268,15 +268,13 @@ public class Member2Test {
         container.putChild("lnk2", new Link("lnk2", real));
 
         List<String> result = memFs.find("/container", "file.txt");
-        // 底层目录real被展开一次，所以结果要么包含lnk1/file.txt或lnk2/file.txt（字典序lnk1先）
-        // 由于lnk1先被展开后real被标记visited，lnk2不会再展开
-        assertTrue(result.size() >= 1, "应该至少找到一个结果");
-        assertTrue(result.size() <= 2, "最多找到两个(取决于展开顺序)");
+        // 遍历时不跟随链接，所以在container下找不到file.txt
+        assertTrue(result.isEmpty(), "遍历时不跟随链接，应该找不到结果");
     }
 
     @Test
     public void testFindThroughSameLinkMultipleTimesPrevented() {
-        // 通过链接进入同一目录，visitedDirs 防止重复展开
+        // 遍历时不跟随链接：linkA和linkB是链接节点，不会被展开
         Directory real = new Directory("real");
         root.putChild("real", real);
         real.putChild("f.txt", new File("f.txt", 1));
@@ -285,10 +283,10 @@ public class Member2Test {
         root.putChild("linkB", new Link("linkB", real));
 
         List<String> result = memFs.find("/", "f.txt");
-        // linkA < linkB < real alphabetically
-        // linkA先被展开，进入real，找到/linkA/f.txt，标记real已访问
-        // linkB遇到，resolve到real，已访问，跳过
-        // real是目录，但因为已被visitedDirs标记，不重复展开
-        assertFalse(result.isEmpty(), "应该找到f.txt");
+        // real < linkA < linkB 按字典序
+        // 遍历时：real是真实目录，会被展开，找到/real/f.txt
+        // linkA和linkB是链接，遍历时不跟随，只检查链接自身名称
+        assertEquals(1, result.size(), "应该只找到/real/f.txt");
+        assertEquals("/real/f.txt", result.get(0));
     }
 }
